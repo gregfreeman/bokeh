@@ -210,6 +210,8 @@ export class ImageURL extends Glyph {
       dilate:         [ p.Bool,      false      ],
       retry_attempts: [ p.Number,    0          ],
       retry_timeout:  [ p.Number,    0          ],
+      scale_x:        [ p.Number,    1.0        ],
+      scale_y:        [ p.Number,    1.0        ],
     });
   }
 }
