@@ -512,11 +512,11 @@ class ImageURL(XYGlyph):
     specified URL. Default is zero ms.
     """)
 
-    scale_x = NumberSpec(help="""
+    scale_x = NumberSpec(1.0, help="""
     Scale of image in x direction. Can be positive or negative to allow image transformations.
     """)
 
-    scale_y = NumberSpec(help="""
+    scale_y = NumberSpec(1.0, help="""
     Scale of image in y direction. Can be positive or negative to allow image transformations.
     """)
 

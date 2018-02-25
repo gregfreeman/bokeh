@@ -87,6 +87,8 @@ declare namespace Bokeh {
     w?: Spatial;
     h?: Spatial;
     angle?: Angular;
+    scale_x?: Numerical;
+    scale_y?: Numerical;
     global_alpha?: Percent;
     dilate?: boolean;
     anchor?: Anchor;

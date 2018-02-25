@@ -96,7 +96,7 @@ export class ImageURLView extends GlyphView {
     }
   }
 
-  _render(ctx: Context2d, indices, {_url, image, sx, sy, sw, sh, _angle}) {
+  _render(ctx: Context2d, indices, {_url, image, sx, sy, sw, sh, _angle, _scale_x, _scale_y}) {
 
     // TODO (bev): take actual border width into account when clipping
     const { frame } = this.renderer.plot_view;
@@ -122,7 +122,7 @@ export class ImageURLView extends GlyphView {
         continue;
       }
 
-      this._render_image(ctx, i, image[i], sx, sy, sw, sh, _angle);
+      this._render_image(ctx, i, image[i], sx, sy, sw, sh, _angle, _scale_x, _scale_y);
     }
 
     if (finished && !this._images_rendered) {
@@ -145,26 +145,42 @@ export class ImageURLView extends GlyphView {
     }
   }
 
-  _render_image(ctx: Context2d, i, image, sx, sy, sw, sh, angle) {
+  _render_image(ctx: Context2d, i, image, sx, sy, sw, sh, angle, scale_x, scale_y) {
     if (isNaN(sw[i])) { sw[i] = image.width; }
     if (isNaN(sh[i])) { sh[i] = image.height; }
 
     const { anchor } = this.model;
     [sx, sy] = this._final_sx_sy(anchor, sx[i], sy[i], sw[i], sh[i]);
-
+    dsx2 = sw[i]/2;  // half width
+    dsy2 = sh[i]/2;  // half height
     ctx.save();
 
     ctx.globalAlpha = this.model.global_alpha;
 
-    if (angle[i]) {
-      ctx.translate(sx, sy);
-      ctx.rotate(angle[i]);
-      ctx.drawImage(image, 0, 0, sw[i], sh[i]);
-      ctx.rotate(-angle[i]);
-      ctx.translate(-sx, -sy);
-    } else {
-      ctx.drawImage(image, sx, sy, sw[i], sh[i]);
+    transform = ctx.currentTransform;
+    if (scale_x[i] && scale_y[i]) {
+      if (angle[i]) {
+        ctx.translate(sx, sy);
+        ctx.rotate(angle[i]);
+        ctx.translate(sx + dsx2, sy + dsy2);
+        ctx.scale(scale_x[i], scale_y[i])
+        ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
+      } else {
+        ctx.translate(sx + dsx2, sy + dsy2);
+        ctx.scale(scale_x[i], scale_y[i])
+        ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
+      }
     }
+    else {
+        if (angle[i]) {
+        ctx.translate(sx, sy);
+        ctx.rotate(angle[i]);
+        ctx.drawImage(image, 0, 0, sw[i], sh[i]);
+      } else {
+        ctx.drawImage(image, sx, sy, sw[i], sh[i]);
+      }
+    }
+    ctx.currentTransform = transform;
     return ctx.restore();
   }
 }
@@ -177,6 +193,8 @@ export namespace ImageURL {
     anchor: Anchor
     global_alpha: number
     angle: AngleSpec
+    scale_x: NumberSpec
+    scale_y: NumberSpec
     w: DistanceSpec
     h: DistanceSpec
     dilate: boolean
@@ -205,13 +223,13 @@ export class ImageURL extends Glyph {
       anchor:         [ p.Anchor,    'top_left' ],
       global_alpha:   [ p.Number,    1.0        ],
       angle:          [ p.AngleSpec, 0          ],
+      scale_x:        [ p.NumberSpec, 1.0       ],
+      scale_y:        [ p.NumberSpec, 1.0       ],
       w:              [ p.DistanceSpec          ],
       h:              [ p.DistanceSpec          ],
       dilate:         [ p.Bool,      false      ],
       retry_attempts: [ p.Number,    0          ],
       retry_timeout:  [ p.Number,    0          ],
-      scale_x:        [ p.Number,    1.0        ],
-      scale_y:        [ p.Number,    1.0        ],
     });
   }
 }
