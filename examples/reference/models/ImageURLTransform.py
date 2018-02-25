@@ -1,5 +1,4 @@
-import numpy as np
-from bokeh.models import ColumnDataSource, Range1d, Plot, LinearAxis, Grid
+from bokeh.models import ColumnDataSource, Range1d, Plot
 from bokeh.models.glyphs import ImageURL
 from bokeh.io import curdoc, show
 
@@ -26,5 +25,7 @@ plot = Plot(
 
 image1 = ImageURL(url="url", x="x1", y="y1", w="w1", h="h1", anchor="center", scale_x="scalex1", scale_y="scaley1")
 plot.add_glyph(source, image1)
+
+curdoc().add_root(plot)
 
 show(plot)
