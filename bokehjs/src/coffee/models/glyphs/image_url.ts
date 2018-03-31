@@ -151,19 +151,18 @@ export class ImageURLView extends GlyphView {
 
     const { anchor } = this.model;
     [sx, sy] = this._final_sx_sy(anchor, sx[i], sy[i], sw[i], sh[i]);
-    dsx2 = sw[i]/2;  // half width
-    dsy2 = sh[i]/2;  // half height
+    var dsx2 = sw[i]/2;  // half width
+    var dsy2 = sh[i]/2;  // half height
     ctx.save();
 
     ctx.globalAlpha = this.model.global_alpha;
 
-    transform = ctx.currentTransform;
+    var transform = ctx.currentTransform;
     if (scale_x[i] && scale_y[i]) {
       if (angle[i]) {
-        ctx.translate(sx, sy);
         ctx.rotate(angle[i]);
-        ctx.translate(sx + dsx2, sy + dsy2);
         ctx.scale(scale_x[i], scale_y[i])
+        ctx.translate(sx + dsx2, sy + dsy2);
         ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
       } else {
         ctx.translate(sx + dsx2, sy + dsy2);
