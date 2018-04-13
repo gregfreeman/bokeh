@@ -407,6 +407,8 @@ declare namespace Bokeh.Plotting {
 
   export interface ImageURLOpts extends GlyphOpts {
     angle?: AngularAttr;
+    scale_x?: DataAttr;
+    scale_y?: DataAttr;
     global_alpha?: Percent;
     dilate?: boolean;
     anchor?: Anchor;

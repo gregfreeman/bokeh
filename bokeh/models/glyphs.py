@@ -511,7 +511,7 @@ class ImageURL(XYGlyph):
 
     # a canonical order for positional args that can be used for any
     # functions derived from this class
-    _args = ('url', 'x', 'y', 'w', 'h', 'angle', 'global_alpha', 'dilate')
+    _args = ('url', 'x', 'y', 'w', 'h', 'angle', 'global_alpha', 'dilate', 'scale_x', 'scale_y')
 
     # TODO (bev) Why is this a NumberSpec??
     url = NumberSpec(accept_datetime=False, help="""
@@ -548,6 +548,14 @@ class ImageURL(XYGlyph):
     The angles to rotate the images, as measured from the horizontal.
     """)
 
+    scale_x = NumberSpec(1.0, help="""
+    Scale of image in x direction. Can be positive or negative to allow image transformations.
+    """)
+
+    scale_y = NumberSpec(1.0, help="""
+    Scale of image in y direction. Can be positive or negative to allow image transformations.
+    """)
+
     global_alpha = Float(1.0, help="""
     An overall opacity that each image is rendered with (in addition
     to any inherent alpha values in the image itself).
@@ -575,6 +583,7 @@ class ImageURL(XYGlyph):
     Timeout (in ms) between retry attempts to load the image from the
     specified URL. Default is zero ms.
     """)
+
 
 class Line(XYGlyph):
     ''' Render a single line.

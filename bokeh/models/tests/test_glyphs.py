@@ -212,6 +212,8 @@ def test_ImageURL():
     assert glyph.retry_attempts == 0
     assert glyph.retry_timeout == 0
     assert glyph.global_alpha == 1.0
+    assert glyph.scale_x == 1.0
+    assert glyph.scale_y == 1.0
     check_properties_existence(glyph, [
         "url",
         "x",
@@ -222,6 +224,8 @@ def test_ImageURL():
         "h_units",
         "angle",
         "angle_units",
+        "scale_x",
+        "scale_y",
         "dilate",
         "anchor",
         "retry_attempts",

@@ -1,5 +1,5 @@
 import {XYGlyph, XYGlyphView, XYGlyphData} from "./xy_glyph"
-import {DistanceSpec, AngleSpec, StringSpec} from "core/vectorization"
+import {DistanceSpec, AngleSpec, StringSpec, NumberSpec} from "core/vectorization"
 import {Arrayable} from "core/types"
 import {Anchor} from "core/enums"
 import {logger} from "core/logging"
@@ -14,6 +14,8 @@ export const CanvasImage = Image
 export interface ImageURLData extends XYGlyphData {
   _url: Arrayable<string>
   _angle: Arrayable<number>
+  _scale_x: Arrayable<number>
+  _scale_y: Arrayable<number>
   _w: Arrayable<number>
   _h: Arrayable<number>
 
@@ -110,7 +112,7 @@ export class ImageURLView extends XYGlyphView {
   }
 
   protected _render(ctx: Context2d, indices: number[],
-                    {_url, image, sx, sy, sw, sh, _angle}: ImageURLData): void {
+                    {_url, image, sx, sy, sw, sh, _angle, _scale_x, _scale_y}: ImageURLData): void {
 
     // TODO (bev): take actual border width into account when clipping
     const {frame} = this.renderer.plot_view
@@ -136,7 +138,7 @@ export class ImageURLView extends XYGlyphView {
         continue
       }
 
-      this._render_image(ctx, i, img, sx, sy, sw, sh, _angle)
+      this._render_image(ctx, i, img, sx, sy, sw, sh, _angle, _scale_x, _scale_y)
     }
 
     if (finished && !this._images_rendered) {
@@ -162,25 +164,48 @@ export class ImageURLView extends XYGlyphView {
   protected _render_image(ctx: Context2d, i: number, image: CanvasImage,
                           sx: Arrayable<number>, sy: Arrayable<number>,
                           sw: Arrayable<number>, sh: Arrayable<number>,
-                          angle: Arrayable<number>): void {
+                          angle: Arrayable<number>,
+                          scale_x: Arrayable<number>, scale_y: Arrayable<number>): void {
     if (isNaN(sw[i])) sw[i] = image.width
     if (isNaN(sh[i])) sh[i] = image.height
 
     const {anchor} = this.model
     const [sxi, syi] = this._final_sx_sy(anchor, sx[i], sy[i], sw[i], sh[i])
-
+    var dsx2 = sw[i]/2;  // half width
+    var dsy2 = sh[i]/2; // half height
     ctx.save()
     ctx.globalAlpha = this.model.global_alpha
 
-    if (angle[i]) {
-      ctx.translate(sxi, syi)
-      ctx.rotate(angle[i])
-      ctx.drawImage(image, 0, 0, sw[i], sh[i])
-      ctx.rotate(-angle[i])
-      ctx.translate(-sxi, -syi)
-    } else
-      ctx.drawImage(image, sxi, syi, sw[i], sh[i])
-
+    if (scale_x[i] != 1 || scale_y[i] != 1) {
+      if (angle[i]) {
+        ctx.translate(sxi, syi);
+        ctx.rotate(angle[i]);
+        ctx.translate(sxi + dsx2, syi + dsy2);
+        ctx.scale(scale_x[i], scale_y[i])
+        ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
+        ctx.scale(1/scale_x[i], 1/scale_y[i])
+        ctx.translate(-sxi - dsx2, -syi - dsy2);
+        ctx.rotate(-angle[i]);
+        ctx.translate(-sxi, -syi);
+      } else {
+        ctx.translate(sxi + dsx2, syi + dsy2);
+        ctx.scale(scale_x[i], scale_y[i])
+        ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
+        ctx.scale(1/scale_x[i], 1/scale_y[i])
+        ctx.translate(-sxi - dsx2, -syi - dsy2);
+      }
+    }
+    else {
+      if (angle[i]) {
+        ctx.translate(sxi, syi);
+        ctx.rotate(angle[i]);
+        ctx.drawImage(image, 0, 0, sw[i], sh[i]);
+        ctx.rotate(-angle[i]);
+        ctx.translate(-sxi, -syi);
+      } else {
+        ctx.drawImage(image, sxi, syi, sw[i], sh[i]);
+      }
+    }
     ctx.restore()
   }
 }
@@ -191,6 +216,8 @@ export namespace ImageURL {
     anchor: Anchor
     global_alpha: number
     angle: AngleSpec
+    scale_x: NumberSpec
+    scale_y: NumberSpec
     w: DistanceSpec
     h: DistanceSpec
     dilate: boolean
@@ -203,6 +230,8 @@ export namespace ImageURL {
     anchor: p.Property<Anchor>
     global_alpha: p.Property<number>
     angle: p.AngleSpec
+    scale_x: p.NumberSpec
+    scale_y: p.NumberSpec
     w: p.DistanceSpec
     h: p.DistanceSpec
     dilate: p.Property<boolean>
@@ -232,6 +261,8 @@ export class ImageURL extends XYGlyph {
       anchor:         [ p.Anchor,    'top_left' ],
       global_alpha:   [ p.Number,    1.0        ],
       angle:          [ p.AngleSpec, 0          ],
+      scale_x:        [ p.Number,    1.0        ],
+      scale_y:        [ p.Number,    1.0        ],
       w:              [ p.DistanceSpec          ],
       h:              [ p.DistanceSpec          ],
       dilate:         [ p.Bool,      false      ],
