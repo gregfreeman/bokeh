@@ -125,7 +125,10 @@ export class ImageURLView extends XYGlyphView {
     let finished = true
 
     for (const i of indices) {
-      if (isNaN(sx[i] + sy[i] + _angle[i]))
+      if (isNaN(sx[i] + sy[i] + _angle[i] + _scale_x[i] + _scale_y[i]))
+        continue
+
+      if ((_scale_x[i]==0)||(_scale_y[i]==0))
         continue
 
       if (this.retries[i] == -1)
@@ -176,17 +179,15 @@ export class ImageURLView extends XYGlyphView {
     ctx.save()
     ctx.globalAlpha = this.model.global_alpha
 
-    if (scale_x[i] != 1 || scale_y[i] != 1) {
+    if ((scale_x[i] != 1) || (scale_y[i] != 1)) {
       if (angle[i]) {
-        ctx.translate(sxi, syi);
-        ctx.rotate(angle[i]);
         ctx.translate(sxi + dsx2, syi + dsy2);
+        ctx.rotate(angle[i]);
         ctx.scale(scale_x[i], scale_y[i])
         ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
         ctx.scale(1/scale_x[i], 1/scale_y[i])
-        ctx.translate(-sxi - dsx2, -syi - dsy2);
         ctx.rotate(-angle[i]);
-        ctx.translate(-sxi, -syi);
+        ctx.translate(-sxi - dsx2, -syi - dsy2);
       } else {
         ctx.translate(sxi + dsx2, syi + dsy2);
         ctx.scale(scale_x[i], scale_y[i])
@@ -197,11 +198,11 @@ export class ImageURLView extends XYGlyphView {
     }
     else {
       if (angle[i]) {
-        ctx.translate(sxi, syi);
+        ctx.translate(sxi + dsx2, syi + dsy2);
         ctx.rotate(angle[i]);
-        ctx.drawImage(image, 0, 0, sw[i], sh[i]);
+        ctx.drawImage(image, -dsx2, -dsy2, sw[i], sh[i]);
         ctx.rotate(-angle[i]);
-        ctx.translate(-sxi, -syi);
+        ctx.translate(-sxi - dsx2, -syi - dsy2);
       } else {
         ctx.drawImage(image, sxi, syi, sw[i], sh[i]);
       }
@@ -261,8 +262,8 @@ export class ImageURL extends XYGlyph {
       anchor:         [ p.Anchor,    'top_left' ],
       global_alpha:   [ p.Number,    1.0        ],
       angle:          [ p.AngleSpec, 0          ],
-      scale_x:        [ p.Number,    1.0        ],
-      scale_y:        [ p.Number,    1.0        ],
+      scale_x:        [ p.NumberSpec, 1.0       ],
+      scale_y:        [ p.NumberSpec, 1.0       ],
       w:              [ p.DistanceSpec          ],
       h:              [ p.DistanceSpec          ],
       dilate:         [ p.Bool,      false      ],

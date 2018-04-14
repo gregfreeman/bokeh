@@ -192,7 +192,7 @@ export class Figure extends Plot {
   ellipse(...args: any[]): GlyphRenderer           { return this._glyph(models.Ellipse,      "x,y,width,height",                                    args); }
   image(...args: any[]): GlyphRenderer             { return this._glyph(models.Image,        "color_mapper,image,rows,cols,x,y,dw,dh",              args); }
   image_rgba(...args: any[]): GlyphRenderer        { return this._glyph(models.ImageRGBA,    "image,rows,cols,x,y,dw,dh",                           args); }
-  image_url(...args: any[]): GlyphRenderer         { return this._glyph(models.ImageURL,     "url,x,y,w,h,scale_x,scale_y",                         args); }
+  image_url(...args: any[]): GlyphRenderer         { return this._glyph(models.ImageURL,     "url,x,y,w,h",                                         args); }
   line(...args: any[]): GlyphRenderer              { return this._glyph(models.Line,         "x,y",                                                 args); }
   multi_line(...args: any[]): GlyphRenderer        { return this._glyph(models.MultiLine,    "xs,ys",                                               args); }
   oval(...args: any[]): GlyphRenderer              { return this._glyph(models.Oval,         "x,y,width,height",                                    args); }
