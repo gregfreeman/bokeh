@@ -19,6 +19,7 @@ export interface ImageURLData extends XYGlyphData {
   _w: Arrayable<number>
   _h: Arrayable<number>
 
+  sangle: Arrayable<number>
   sx: Arrayable<number>
   sy: Arrayable<number>
   sw: Arrayable<number>
@@ -82,11 +83,14 @@ export class ImageURLView extends XYGlyphView {
     return super.has_finished() && this._images_rendered == true
   }
 
+
   protected _map_data(): void {
     // Better to check this.model.w and this.model.h for null since the set_data
     // machinery will have converted this._w and this._w to lists of null
     const ws = this.model.w != null ? this._w : map(this._x, () => NaN)
     const hs = this.model.h != null ? this._h : map(this._x, () => NaN)
+    const angle = this.model.angle != null ? this._angle : map(this._angle, () => NaN)
+
 
     switch (this.model.properties.w.units) {
       case "data": {
@@ -109,10 +113,29 @@ export class ImageURLView extends XYGlyphView {
         break
       }
     }
+    if (this.model.properties.h.units=="data" && this.model.properties.w.units=="data" && angle)
+    {
+      // transform image height and width when rotation angle applied
+      // height is not yscale and width is not xscale
+      this.sangle = new Float64Array(angle.length)
+      for (var _i = 0; _i < angle.length; _i++) {
+        const imgh = Math.hypot(this.sh[_i] * Math.cos(angle[_i]), this.sw[_i] / ws[_i] * hs[_i] * Math.sin(angle[_i]))
+        const imgw = Math.hypot(this.sw[_i] * Math.cos(angle[_i]), this.sh[_i] / hs[_i] * ws[_i] * Math.sin(angle[_i]))
+        // screen angle
+        this.sangle[_i] = Math.atan2(Math.sin(angle[_i]) * this.sh[_i] / hs[_i], Math.cos(angle[_i]) * this.sw[_i] / ws[_i])
+        this.sh[_i] = imgh
+        this.sw[_i] = imgw
+      }
+    }
+    else
+    {
+      // screen angle
+      this.sangle = this._angle
+    }
   }
 
   protected _render(ctx: Context2d, indices: number[],
-                    {_url, image, sx, sy, sw, sh, _angle, _scale_x, _scale_y}: ImageURLData): void {
+                    {_url, image, sx, sy, sw, sh, sangle, _scale_x, _scale_y}: ImageURLData): void {
 
     // TODO (bev): take actual border width into account when clipping
     const {frame} = this.renderer.plot_view
@@ -125,7 +148,7 @@ export class ImageURLView extends XYGlyphView {
     let finished = true
 
     for (const i of indices) {
-      if (isNaN(sx[i] + sy[i] + _angle[i] + _scale_x[i] + _scale_y[i]))
+      if (isNaN(sx[i] + sy[i] + sangle[i] + _scale_x[i] + _scale_y[i]))
         continue
 
       if ((_scale_x[i]==0)||(_scale_y[i]==0))
@@ -141,7 +164,7 @@ export class ImageURLView extends XYGlyphView {
         continue
       }
 
-      this._render_image(ctx, i, img, sx, sy, sw, sh, _angle, _scale_x, _scale_y)
+      this._render_image(ctx, i, img, sx, sy, sw, sh, sangle, _scale_x, _scale_y)
     }
 
     if (finished && !this._images_rendered) {
